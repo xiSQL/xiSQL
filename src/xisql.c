@@ -23,6 +23,32 @@
  */
 
 #include <stdio.h>
+#include <dlfcn.h>
 
 int main(int argc, char *argv[]){
+  void *pHandle = NULL;
+  int (*startup)(int, char*[]);
+  char *errorInfo = NULL;
+  int res = 0;
+
+  pHandle = dlopen("xisql.so", RTLD_NOW);
+  if (pHandle == NULL){
+    printf("xisql[error]: %s.\r\n", dlerror());
+    return 0;
+  }
+
+  startup = dlsym(pHandle, "startup");
+  errorInfo = dlerror();
+  if (errorInfo != NULL){
+    printf("xisql[error]: startup method error: %s.\r\n", errorInfo);
+    dlclose(pHandle);
+    return 0;
+  }
+   
+  res = (*startup)(argc, argv);
+  if (res != 0){
+    printf("return error.\r\n");
+  }
+  dlclose(pHandle);
 }
+
